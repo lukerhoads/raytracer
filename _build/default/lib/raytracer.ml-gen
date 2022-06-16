@@ -1,0 +1,6 @@
+(** @canonical Raytracer.Util *)
+module Util = Raytracer__Util
+
+
+(** @canonical Raytracer.Vec3 *)
+module Vec3 = Raytracer__Vec3
