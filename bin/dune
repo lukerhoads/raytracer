@@ -1,4 +1,4 @@
 (executable
  (public_name raytracer)
  (name main)
- (libraries raytracer base stdio))
+ (libraries raytracer))

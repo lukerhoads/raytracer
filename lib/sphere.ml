@@ -1,7 +1,5 @@
 open Vec3
-
-let t_min = 0. 
-and t_max = max_float
+open Option
 
 type hit_record = { t: float; p: Vec3.t; normal: Vec3.t; front_face: bool; }
 
@@ -13,13 +11,14 @@ type t = { center: Vec3.t; radius: float }
 let create center radius = { center; radius; }
 
 let hit (r: Ray.t) ({ center; radius }: t) : hit_record option =
+  let t_min = 0.00001 in
   let oc = r.origin -| center in 
   let a = Vec3.length_squared r.direction
   and half_b = Vec3.dot oc r.direction
   and c = (Vec3.length_squared oc) -. (radius *. radius) in
 
   let hit_record_from_t t: hit_record option =  
-    if (t < t_max && t > t_min) then 
+    if (t > t_min) then 
       let p = Ray.at r t in 
       let outward_normal = (p -| center) /| radius in 
       match get_face_normal r outward_normal with 
