@@ -54,3 +54,12 @@ let near_zero v =
 
 let reflect v n = 
   v -| (2. *| ((dot v n) *| n))
+
+let refract uv n etai_over_etat = 
+  let cos_theta = min (dot ((-1.) *| uv) n) 1. in 
+  let r_out_perp = etai_over_etat *| (uv +| (cos_theta *| n)) in 
+  let r_out_parallel = ((-1.) *. (sqrt (abs_float (1. -. (length_squared r_out_perp))))) *| n in 
+  r_out_perp +| r_out_parallel
+
+let negate v =
+  {x = (-.v.x); y = (-.v.y); z = (-.v.z)}

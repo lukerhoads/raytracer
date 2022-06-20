@@ -2,13 +2,13 @@ open Vec3
 open Option
 
 let get_face_normal (ray: Ray.t) (normal: Vec3.t) : bool =
-  (Vec3.dot ray.direction normal) < 0.
+  (Vec3.dot ray.direction normal) > 0.
 
-type t = { center: Vec3.t; radius: float; mat_ptr: Material.t }
+type t = { center: Vec3.t; radius: float; material: Material.t }
 
-let create center radius material = { center; radius; mat_ptr = material }
+let create center radius material = { center; radius; material }
 
-let hit (r: Ray.t) ({ center; radius; mat_ptr }: t) : Material.hit_record option =
+let hit (r: Ray.t) ({ center; radius; material }: t) : Material.hit_record option =
   let t_min = 0.00001 in
   let oc = r.origin -| center in 
   let a = Vec3.length_squared r.direction
@@ -19,9 +19,10 @@ let hit (r: Ray.t) ({ center; radius; mat_ptr }: t) : Material.hit_record option
     if (t > t_min) then 
       let p = Ray.at r t in 
       let outward_normal = (p -| center) /| radius in 
-      match get_face_normal r outward_normal with 
-      | true -> Some { t; p; normal = ((p -| center) /| radius); front_face = true; mat_ptr }
-      | false -> Some { t; p; normal = ((-1.) *| ((p -| center) /| radius)); front_face = false; mat_ptr }
+      let outward_face = get_face_normal r outward_normal in 
+      let normal = if outward_face then (negate outward_normal) else outward_normal in 
+      let front_face = if outward_face then false else true in
+      Some { t; p; normal; front_face; material }
     else 
       None
     in
@@ -37,3 +38,5 @@ let hit (r: Ray.t) ({ center; radius; mat_ptr }: t) : Material.hit_record option
       hit_record_from_t t2
   else 
     None
+
+    

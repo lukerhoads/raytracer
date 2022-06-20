@@ -4,23 +4,31 @@ open Stdio
 open Raytracer
 open Vec3
 
-let material_ground = Material.create (Vec3.create 0.8 0.8 0.) Lambertian 
-let material_center = Material.create (Vec3.create 0.7 0.3 0.3) Lambertian 
-let material_left = Material.create (Vec3.create 0.8 0.8 0.8) Metal 
-let material_right = Material.create (Vec3.create 0.8 0.6 0.2) Metal
+(* let material_ground = Material.Lambertian { albedo = Vec3.create 0.8 0.8 0. } 
+let material_center = Material.Lambertian { albedo = Vec3.create 0.1 0.2 0.5 }
+
+let material_left = Material.Dielectric { ir = 1.5 }
+let material_right = Material.Metal { albedo = Vec3.create 0.8 0.6 0.2; fuzz = 0. }
 let ground_sphere = Sphere.create (Vec3.create 0. (-100.5) (-1.)) 100. material_ground 
 let sphere1 = Sphere.create (Vec3.create 0. 0. (-1.)) 0.5 material_center
 
-let sphere2 = Sphere.create (Vec3.create (-1.) 0. (-1.)) 0.5 material_left 
-let sphere3 = Sphere.create (Vec3.create 1. 0. (-1.)) 0.5 material_right
-let world = Scene.create |> Scene.add ground_sphere |> Scene.add sphere1 |> Scene.add sphere2 |> Scene.add sphere3
+let sphere2 = Sphere.create (Vec3.create (-1.) 0. (-1.)) 0.5 material_left
+let sphere3 = Sphere.create (Vec3.create (-1.) 0. (-1.)) (-0.4) material_left
+let sphere4 = Sphere.create (Vec3.create 1. 0. (-1.)) 0.5 material_right *)
 
-(* let random_unit_vector () =
-  let open Float in
-  let a = Random.float_range 0. (2. * pi)
-  and z = Random.float_range (-1.) 1. in
-  let r = sqrt(1. - z * z) in
-  Vec3.create (r * cos(a)) (r * sin(a)) z *)
+let ground_sphere = Sphere.create (Vec3.create 0. (-100.5) (-1.)) 100. (Material.Lambertian { albedo = Vec3.create 0.8 0.8 0. })
+let sphere1 = Sphere.create (Vec3.create 0. 0. (-1.)) 0.5
+  (Material.Lambertian { albedo = (Vec3.create 0.1 0.2 0.5) })
+let sphere2 = Sphere.create (Vec3.create (-1.) 0. (-1.)) 0.5
+  (Material.Dielectric { ir = 1.5 })
+let sphere3 = Sphere.create (Vec3.create (-1.) 0. (-1.)) (-0.4)
+  (Material.Dielectric { ir = 1.5 })
+and sphere4 = Sphere.create (Vec3.create 1. 0. (-1.)) 0.5
+  (Material.Metal { albedo = (Vec3.create 0.8 0.6 0.2); fuzz = 0. })
+let world = 
+  let open Scene in 
+  create 
+  |> add ground_sphere |> add sphere1 |> add sphere2 |> add sphere3 |> add sphere4
 
 let ray_color (ray: Ray.t) =
   let max_depth = 50 in
@@ -30,11 +38,11 @@ let ray_color (ray: Ray.t) =
     | _ -> 
       match Scene.hit r world with 
       | Some hit_record -> 
-        let (scattered, attenuation, thing) = Material.scatter hit_record.mat_ptr ray hit_record in
-        if thing then (Vec3.mult_vec attenuation (helper scattered (dep - 1)))
-        else Vec3.zero
-        (* let target = hit_record.p +| hit_record.normal +| random_unit_vector() in
-        mult (helper (Ray.create hit_record.p (target -| hit_record.p)) (dep - 1)) 0.5 *)
+        begin match Material.scatter ray hit_record hit_record.material with
+          | Some { scattered; attenuation } -> 
+            Vec3.mult_vec (helper scattered (dep - 1)) attenuation 
+          | None -> Vec3.zero
+        end
       | None ->
         let unit_direction = ray.direction in
         let t = 0.5 *. (unit_direction.y +. 1.0) in 
