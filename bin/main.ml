@@ -60,13 +60,13 @@ let write_color file color samples_per_pixel =
   Out_channel.fprintf file "%d %d %d\n" ir ig ib 
     
 let () =
-  let width = 200
-  and height = 100
+  let width = 400
+  and height = 200
   and samples_per_pixel = 100 in
   let file = Out_channel.create "image.ppm" in
   let _ = Out_channel.fprintf file "P3\n%d %d\n255\n" width height in
   
-  (* let _ = 
+  let _ = 
   (Sequence.cartesian_product 
     (Sequence.range ~stride:(-1) ~stop:`inclusive (height - 1) 0)
     (Sequence.range 0 width)
@@ -78,9 +78,9 @@ let () =
         and v = (Float.of_int(j) +. Random.float(1.)) /. Float.of_int(height) in
         let r = Camera.get_ray u v in
         acc +| ray_color r
-      ) in write_color file color samples_per_pixel) in *)
+      ) in write_color file color samples_per_pixel) in
 
-  let _ = 
+  (* let _ = 
     (Sequence.range ~stride:(-1) ~stop:`inclusive (height - 1) 0) |> Sequence.iter ~f:(fun (j) ->
       (* printf "%d lines left\n" j; *)
       (Sequence.range 0 width) |> Sequence.iter ~f:(fun (i) ->
@@ -89,5 +89,5 @@ let () =
             and v = (Float.of_int(j) +. Random.float (1.)) /. Float.of_int(height) in
             let r = Camera.get_ray u v in
             acc +| ray_color r
-          ) in write_color file color samples_per_pixel)) in
+          ) in write_color file color samples_per_pixel)) in *)
     printf "Done\n"

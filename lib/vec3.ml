@@ -38,6 +38,9 @@ let cross u v =
 let lerp v1 v2 t = 
   ((1. -. t) *| v1) +| (t *| v2)
 
+let negate v =
+  {x = (-.v.x); y = (-.v.y); z = (-.v.z)}
+
 let format chan v = 
   Printf.fprintf chan "%f %f %f" v.x v.y v.z
 
@@ -53,13 +56,11 @@ let near_zero v =
   (abs v.x < s) && (abs v.y < s) && (abs v.z < s)
 
 let reflect v n = 
-  v -| (2. *| ((dot v n) *| n))
+  v -| (2. *. (dot v n)) *| n
 
 let refract uv n etai_over_etat = 
-  let cos_theta = min (dot ((-1.) *| uv) n) 1. in 
+  let cos_theta = min (dot (negate uv) n) 1. in 
   let r_out_perp = etai_over_etat *| (uv +| (cos_theta *| n)) in 
-  let r_out_parallel = ((-1.) *. (sqrt (abs_float (1. -. (length_squared r_out_perp))))) *| n in 
+  let r_out_parallel = ((-1.) *. sqrt (1. -. (length_squared r_out_perp))) *| n in
   r_out_perp +| r_out_parallel
 
-let negate v =
-  {x = (-.v.x); y = (-.v.y); z = (-.v.z)}
