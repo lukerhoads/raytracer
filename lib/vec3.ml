@@ -13,6 +13,9 @@ let (-|) v1 v2 =
 let ( *| ) t v = 
   { x = v.x *. t; y = v.y *. t; z = v.z *. t }
 
+let mult_vec v1 v2 =
+  { x = v1.x *. v2.x; y = v1.y *. v2.y; z = v1.z *. v2.z }
+
 let mult v1 s = {x= v1.x *. s; y= v1.y *. s; z= v1.z *. s}
 
 let (/|) v t =  
@@ -43,3 +46,11 @@ let length v =
 
 let unit v = 
   v /| (length v)
+
+let near_zero v =
+  let open Float in 
+  let s = 1e-8 in 
+  (abs v.x < s) && (abs v.y < s) && (abs v.z < s)
+
+let reflect v n = 
+  v -| (2. *| ((dot v n) *| n))
