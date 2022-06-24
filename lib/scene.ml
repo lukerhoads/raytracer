@@ -14,3 +14,4 @@ let hit (r: Ray.t) (scene: t): Material.hit_record option =
   List.min_elt ~compare:(fun (rec_1: Material.hit_record) rec_2 ->
       Float.compare rec_1.t rec_2.t
     )
+

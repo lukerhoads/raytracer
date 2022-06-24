@@ -6,11 +6,7 @@ type t =
   | Metal of { albedo: Vec3.t; fuzz: float }
   | Dielectric of { ir: float }
 
-type face_direction =
-  | FrontFace 
-  | BackFace
-
-type hit_record = { t: float; p: Vec3.t; normal: Vec3.t; front_face: bool; material: t }
+type hit_record = { t: float; p: Vec3.t; normal: Vec3.t; material: t; front_face: bool; }
 
 let random_unit_vector () =
   let open Float in
@@ -23,7 +19,7 @@ let reflectance cosine ref_idx =
   let open Float in 
   let r0 = (1. - ref_idx) / (1. + ref_idx) in 
   let r0 = r0 * r0 in 
-  r0 +. (1. - r0) * (int_pow (1. -. cosine) 5)
+  r0 + (1. - r0) * (int_pow (1. - cosine) 5)
 
 type scatter_result = { scattered: Ray.t; attenuation: Vec3.t }
 
@@ -33,8 +29,8 @@ let scatter (ray: Ray.t) (hit_rec: hit_record) =
   | Lambertian { albedo } -> 
     let scatter = hit_rec.normal +| random_unit_vector() in 
     let scattered = Ray.create hit_rec.p scatter in
-    if Vec3.near_zero scatter then Some { scattered = Ray.create hit_rec.p hit_rec.normal; attenuation = albedo }
-    else Some { scattered; attenuation = albedo }
+    let attenuation = albedo in 
+    Some { scattered; attenuation }
   | Metal { albedo; fuzz } -> 
     let reflected = Vec3.reflect ray.direction hit_rec.normal in 
     let scattered = Ray.create hit_rec.p (reflected +| fuzz *| random_unit_vector()) in 
