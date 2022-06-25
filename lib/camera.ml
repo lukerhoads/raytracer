@@ -60,3 +60,5 @@ let get_ray u v camera =
     (u *| camera.horizontal) +| 
     (v *| camera.vertical) -| 
     camera.origin -| offset)
+
+

@@ -76,7 +76,7 @@ let ray_color (r: Ray.t) =
         | None -> Vec3.zero
         end
     | None ->
-      let unit_direction = r.direction in
+      let unit_direction = Vec3.unit r.direction in
       let t = 0.5 *. (unit_direction.y +. 1.0) in 
       Vec3.lerp (Vec3.create 1. 1. 1.) (Vec3.create 0.5 0.7 1.0) t in
   helper r max_depth
@@ -93,7 +93,7 @@ let write_color file color samples_per_pixel =
     
 let () =
   let aspect_ratio = 16. /. 9. in 
-  let width = 400 in 
+  let width = 200 in 
   let height = Float.to_int (Float.of_int width /. aspect_ratio) in 
   let samples_per_pixel = 100
   and lookfrom = Vec3.create 3. 3. 2.
@@ -102,9 +102,9 @@ let () =
     ~lookfrom:lookfrom 
     ~lookat:lookat 
     ~vup:(Vec3.create 0. 1. 0.)
-    ~vfov:(20.)
-    ~aspect_ratio:(aspect_ratio)
-    ~aperture:(2.)
+    ~vfov:20.
+    ~aspect_ratio:aspect_ratio
+    ~aperture:2.
     ~focus_dist:(Vec3.length (lookfrom -| lookat))
   in
   let file = Out_channel.create "image.ppm" in
