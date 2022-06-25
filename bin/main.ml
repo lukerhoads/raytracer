@@ -4,63 +4,46 @@ open Stdio
 open Raytracer
 open Vec3
 
-let sphere1 = Sphere.create (Vec3.create 0. 0. (-1.)) 0.5
-  (Material.Lambertian { albedo = (Vec3.create 0.1 0.2 0.5) })
-and sphere2 = Sphere.create (Vec3.create 0. (-100.5) (-1.)) 100.
-  (Material.Lambertian { albedo = (Vec3.create 0.8 0.8 0.) })
-let sphere3 = Sphere.create (Vec3.create 1. 0. (-1.)) 0.5
-  (Material.Metal { albedo = (Vec3.create 0.8 0.6 0.2); fuzz = 0.3 })
-and sphere4 = Sphere.create (Vec3.create (-1.) 0. (-1.)) 0.5
-  (Material.Dielectric { ir = 1.5 })
-
-(* let ratio = 
-  let open Float in 
-  cos (pi / 4.)
-
-let left_sphere = Sphere.create (Vec3.create ((-1.) *. ratio) 0. (-1.)) ratio 
-  (Material.Lambertian { albedo = (Vec3.create 0. 0. 1.) })
-
-let right_sphere = Sphere.create (Vec3.create ratio 0. (-1.)) ratio 
-  (Material.Lambertian { albedo = (Vec3.create 1. 0. 0.) }) *)
+let random_vec () = 
+  Vec3.create (Random.float 1.) (Random.float 1.) (Random.float 1.)
 
 let world = 
+  let open Float in 
   let open Scene in
-  create 
-  |> add sphere1 |> add sphere2 |> add sphere3 |> add sphere4
-
-(* let random_scene = 
-  let scene = Scene.create in 
-  let ground_sphere = Sphere.create (Vec3.create 0. (-1000.) 0.) 1000.
-    (Material.Lambertian { albedo = (Vec3.create 0.5 0.5 0.5) }) in 
-  let _ = scene |> Scene.add ground_sphere in
-  
-  (Sequence.cartesian_product
-    (Sequence.range (-11) 10)
-    (Sequence.range (-11) 10)
-  )
-  |> Sequence.iter 
-    ~f:(fun (a, b) ->
-      let choose_mat = Random.float 1. in 
-      let center = Vec3.create (a +. 0.9 *. (Random.float 1.)) 0.2 (b +. 0.9 *. (Random.float 1.)) in 
-      if (Vec3.length (center -| (Vec3.create 4. 0.2 0.))) > 0.9 then 
-      begin 
-        let sphere_material = if choose_mat < 0.8 then (Material.Lambertian { albedo = (Vec3.random() *| Vec3.random()) })
-        else begin  
-          if choose_mat < 0.95 then (Material.Metal { albedo = (Vec3.random ~floor=0.5) })
-          else (Material.Dielectric { ir = 1.5 })
-        end in 
-        scene |> Scene.add (Sphere.create center 0.2 sphere_material) in 
-      end
-    )
-
-  let sphere1 = Sphere.create (Vec3.create 0. 1. 0.) 1.
+  let sphere1 = Sphere.create (Vec3.create 0. (-1000.) 0.) 1000.
+    (Material.Lambertian { albedo = (Vec3.create 0.5 0.5 0.5) })
+  and sphere2 = Sphere.create (Vec3.create 0. 1. 0.) 1.
     (Material.Dielectric { ir = 1.5 })
-  and sphere2 = Sphere.create (Vec3.create (-4.) 1. 0.) 1.
+  and sphere3 = Sphere.create (Vec3.create (-4.) 1. 0.) 1.0
     (Material.Lambertian { albedo = (Vec3.create 0.4 0.2 0.1) })
-  and sphere3 = Sphere.create (Vec3.create 4. 1. 0.) 1.
-    (Material.Metal { albedo = (Vec3.create 0.7 0.6 0.5); fuzz = 0. }) in 
-  scene |> Scene.add sphere1 |> Scene.add sphere2 |> Scene.add sphere3 in 
-  scene *)
+  and sphere4 = Sphere.create (Vec3.create 4. 1. 0.) 1.0
+    (Material.Metal { albedo = (Vec3.create 0.7 0.6 0.5); fuzz = 0.0 }) in
+  (Sequence.cartesian_product
+    (Sequence.range (-11) 11)
+    (Sequence.range (-11) 11)
+  ) |> Sequence.fold  
+    ~init:(create 
+      |> add sphere1 
+      |> add sphere2 
+      |> add sphere3 
+      |> add sphere4
+    )
+    ~f:(fun acc (b, a) ->
+      let choose_mat = Random.float 1. in 
+      let center = Vec3.create (Int.to_float(a) +. 0.9 *. (Random.float 1.)) 0.2 (Int.to_float(b) +. 0.9 *. (Random.float 1.)) in 
+      if ((Vec3.length (center -| (Vec3.create 4. 0.2 0.))) > 0.9) then 
+        if choose_mat < 0.8 then 
+          let albedo = Vec3.mult_vec (random_vec()) (random_vec()) in 
+          acc |> add (Sphere.create center 0.2 (Material.Lambertian { albedo }))
+        else if choose_mat < 0.95 then 
+          let albedo = Vec3.create (Random.float_range 0.5 1.) (Random.float_range 0.5 1.) (Random.float_range 0.5 1.) in 
+          let fuzz = Random.float_range 0. 0.5 in 
+          acc |> add (Sphere.create center 0.2 (Material.Metal { albedo; fuzz }))
+        else 
+          acc |> add (Sphere.create center 0.2 (Material.Dielectric { ir = 1.5 }))
+      else 
+        acc
+    )
 
 let ray_color (r: Ray.t) =
   let max_depth = 50 in
@@ -90,22 +73,23 @@ let write_color file color samples_per_pixel =
   and ig = 256. *. Float.clamp_exn g ~min:0. ~max:1. |> Float.to_int
   and ib = 256. *. Float.clamp_exn b ~min:0. ~max:1. |> Float.to_int in
   Out_channel.fprintf file "%d %d %d\n" ir ig ib
-    
+
 let () =
+  printf "Hello";
   let aspect_ratio = 16. /. 9. in 
-  let width = 200 in 
-  let height = Float.to_int (Float.of_int width /. aspect_ratio) in 
+  let width = 1920 in 
+  let height = Float.to_int (Float.of_int width /. aspect_ratio) in
   let samples_per_pixel = 100
-  and lookfrom = Vec3.create 3. 3. 2.
-  and lookat = Vec3.create 0. 0. (-1.) in
+  and lookfrom = Vec3.create 13. 2. 3. 
+  and lookat = Vec3.create 0. 0. 0. in
   let camera = Camera.create
     ~lookfrom:lookfrom 
     ~lookat:lookat 
     ~vup:(Vec3.create 0. 1. 0.)
     ~vfov:20.
     ~aspect_ratio:aspect_ratio
-    ~aperture:2.
-    ~focus_dist:(Vec3.length (lookfrom -| lookat))
+    ~aperture:0.1
+    ~focus_dist:10.
   in
   let file = Out_channel.create "image.ppm" in
   let _ = Out_channel.fprintf file "P3\n%d %d\n255\n" width height in
